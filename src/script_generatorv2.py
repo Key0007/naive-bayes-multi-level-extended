@@ -7,9 +7,9 @@ def generate_script(script_name, command, target_path):
 ### select the partition "def"
 #SBATCH --partition=def
 ### set email address for sending job status
-#SBATCH --mail-user=kr3288@drexel.edu
+#SBATCH --mail-user=xxxxxxx@drexel.edu
 ### account - essentially your research group
-#SBATCH --account=rosenMRIPrj
+#SBATCH --account=xxxxxxx
 ### select number of nodes
 #SBATCH --nodes=1
 ### select number of tasks per node (threads)
