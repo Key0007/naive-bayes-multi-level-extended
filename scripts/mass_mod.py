@@ -39,7 +39,7 @@ def output_modifier(csv_file_path):
 
     taxa = csv_file_path.split('/')[-1].split("_")[2]
     TRIAL_MAP = create_trial_map(taxa)
-    lookup = create_lookup(taxa.capitalize()))
+    lookup = create_lookup(taxa.capitalize())
 
     with open('/ifs/groups/rosenMRIGrp/kr3288/eeee.json', 'r') as j:
         dict_ = json.load(j)
