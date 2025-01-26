@@ -38,8 +38,8 @@ def create_lookup(taxa):
 def output_modifier(csv_file_path):
 
     taxa = csv_file_path.split('/')[-1].split("_")[2]
-    TRIAL_MAP = create_trial_map(taxa.lower())
-    lookup = create_lookup(taxa.lower())
+    TRIAL_MAP = create_trial_map(taxa)
+    lookup = create_lookup(taxa.capitalize()))
 
     with open('/ifs/groups/rosenMRIGrp/kr3288/eeee.json', 'r') as j:
         dict_ = json.load(j)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     for trial in ['trial_1', 'trial_2', 'trial_3', 'trial_4', 'trial_5']:
         for kmer in ['3', '6', '9', '12', '15']:
-            for taxa in ['Phylum', 'Class', 'Order', 'Family']:
+            for taxa in ['phylum', 'class', 'order', 'family']:
                 path = os.path.join(f'/ifs/groups/rosenMRIGrp/kr3288/extended/{taxa}_testing/{kmer}-mers/classification_results', f'{trial}_{taxa}_{kmer}mers.csv')
                 all_csv_paths.append(path)
 
