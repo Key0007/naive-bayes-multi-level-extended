@@ -58,13 +58,13 @@ def output_modifier(csv_file_path):
 
     df = pd.merge(
         df,
-        lookup[['Species_ID', taxa]],
+        lookup[['Species_ID', taxa.capitalize()]],
         left_on='Predicted Species_ID',
         right_on='Species_ID',
         how='left'
     )
 
-    df = df.rename(columns={taxa: f'Predicted {taxa}'})
+    df = df.rename(columns={taxa: f'Predicted {taxa.capitalize()}'})
     df = df.drop(columns='Species_ID')
 
     actual_species = [l.get(element, '') for element in df['NCBI RefSeq']]
@@ -74,13 +74,13 @@ def output_modifier(csv_file_path):
 
     df = pd.merge(
         df,
-        lookup[['Species_ID', taxa]],
+        lookup[['Species_ID', taxa.capitalize()]],
         left_on='Actual Species',
         right_on='Species_ID',
         how='left'
     )
 
-    df = df.rename(columns={taxa: f'Actual {taxa}'})
+    df = df.rename(columns={taxa: f'Actual {taxa.capitalize()}'})
     df = df.drop(columns='Species_ID')
 
     df['NCBI RefSeq striped'] = df['NCBI RefSeq'].str.split('_').str[:2].str.join('_')
