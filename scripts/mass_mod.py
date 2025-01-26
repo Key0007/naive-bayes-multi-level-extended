@@ -6,7 +6,7 @@ from multiprocessing import Pool
 
 def get_training_list(taxa, trial):
 
-    file_path = f'/ifs/groups/rosenMRIGrp/kr3288/extended/training_lists/{taxa}/{taxa}_{trial}_training_list.txt'
+    file_path = f'/ifs/groups/rosenMRIGrp/kr3288/extended/training_lists/{taxa}_{trial}.txt'
     with open(file_path, 'r') as t:
         lines = t.readlines()
         return [line.strip('\n')[1:] for line in lines]
@@ -38,8 +38,8 @@ def create_lookup(taxa):
 def output_modifier(csv_file_path):
 
     taxa = csv_file_path.split('/')[-1].split("_")[2]
-    TRIAL_MAP = create_trial_map(taxa)
-    lookup = create_lookup(taxa)
+    TRIAL_MAP = create_trial_map(taxa.lower())
+    lookup = create_lookup(taxa.lower())
 
     with open('/ifs/groups/rosenMRIGrp/kr3288/eeee.json', 'r') as j:
         dict_ = json.load(j)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     for trial in ['trial_1', 'trial_2', 'trial_3', 'trial_4', 'trial_5']:
         for kmer in ['3', '6', '9', '12', '15']:
-            for taxa in ['phylum', 'class', 'order', 'family']:
+            for taxa in ['Phylum', 'Class', 'Order', 'Family']:
                 path = os.path.join(f'/ifs/groups/rosenMRIGrp/kr3288/extended/{taxa}_testing/{kmer}-mers/classification_results', f'{trial}_{taxa}_{kmer}mers.csv')
                 all_csv_paths.append(path)
 
@@ -114,20 +114,3 @@ if __name__ == "__main__":
     
     with Pool(processes=num_threads) as pool:
         pool.map(output_modifier, all_csv_paths)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
