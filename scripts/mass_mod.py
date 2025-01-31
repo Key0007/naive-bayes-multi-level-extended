@@ -37,66 +37,97 @@ def create_lookup(taxa):
 
 def output_modifier(csv_file_path):
 
+def output_modifier(csv_file_path):
+    # Extract taxa and set up paths/mappings
     taxa = csv_file_path.split('/')[-1].split("_")[2]
     TRIAL_MAP = create_trial_map(taxa)
     lookup = create_lookup(taxa.capitalize())
-
+    
+    # Load JSON dictionary
     with open('/ifs/groups/rosenMRIGrp/kr3288/eeee.json', 'r') as j:
         dict_ = json.load(j)
     
     l = {value: key for key, values in dict_.items() for value in values}
-
-    mod_path = f"/ifs/groups/rosenMRIGrp/kr3288/extended/{taxa}_modified"
-    os.makedirs(mod_path, exist_ok=True) 
-
-    df = pd.read_csv(csv_file_path, names=['NCBI RefSeq', 'Predicted Species_ID', 'Logarithmic probability'])
-    mask = df['NCBI RefSeq'].apply(lambda x: not re.match(r'^\d+$', str(x)))
-    df = df[mask]
-    # convert to strings
-    lookup['Species_ID'] = lookup['Species_ID'].astype(str)
-    df['Predicted Species_ID'] = df['Predicted Species_ID'].astype(str)
-
-    df = pd.merge(
-        df,
-        lookup[['Species_ID', taxa.capitalize()]],
-        left_on='Predicted Species_ID',
-        right_on='Species_ID',
-        how='left'
-    )
-
-    df = df.rename(columns={taxa: f'Predicted {taxa.capitalize()}'})
-    df = df.drop(columns='Species_ID')
-
-    actual_species = [l.get(element, '') for element in df['NCBI RefSeq']]
-
-    df["Actual Species"] = actual_species
-    df["Actual Species"] = df["Actual Species"].str.strip()
-
-    df = pd.merge(
-        df,
-        lookup[['Species_ID', taxa.capitalize()]],
-        left_on='Actual Species',
-        right_on='Species_ID',
-        how='left'
-    )
-
-    df = df.rename(columns={taxa: f'Actual {taxa.capitalize()}'})
-    df = df.drop(columns='Species_ID')
-
-    df['NCBI RefSeq striped'] = df['NCBI RefSeq'].str.split('_').str[:2].str.join('_')
-
-    trial_number = csv_file_path.split("/")[-1].split("_")[2]
-    target_list = TRIAL_MAP.get(trial_number, '')
-
-    df['Known/Unknown'] = df['NCBI RefSeq striped'].apply(lambda x: 'Known' if x in target_list else 'Unknown')
     
-    df['Accurate Prediction'] = (df[f"Predicted {taxa}"] == df[f"Actual {taxa}"])
+    # Create directory
+    mod_path = f"/ifs/groups/rosenMRIGrp/kr3288/extended/{taxa}_modified"
+    os.makedirs(mod_path, exist_ok=True)
 
-    df = df.drop(columns='NCBI RefSeq striped')
+    # Read and process CSV
+    df = (
+        pl.read_csv(
+            csv_file_path,
+            has_header=False,
+            new_columns=['NCBI RefSeq', 'Predicted Species_ID', 'Logarithmic probability']
+        )
+        .filter(~pl.col('NCBI RefSeq').cast(str).str.contains(r'^\d+$'))
+        .with_columns([
+            pl.col('Predicted Species_ID').cast(str)
+        ])
+    )
 
+    # First merge operation
+    df = (
+        df.join(
+            lookup.select(['Species_ID', pl.col(taxa.capitalize())]),
+            left_on='Predicted Species_ID',
+            right_on='Species_ID',
+            how='left'
+        )
+        .drop('Species_ID')
+        .rename({taxa.capitalize(): f'Predicted {taxa.capitalize()}'})
+    )
+
+    # Add actual species
+    df = (
+        df.with_columns([
+            pl.col('NCBI RefSeq').map_dict(l, default='').alias('Actual Species'),
+        ])
+        .with_columns([
+            pl.col('Actual Species').str.strip_chars()
+        ])
+    )
+
+    # Second merge operation
+    df = (
+        df.join(
+            lookup.select(['Species_ID', pl.col(taxa.capitalize())]),
+            left_on='Actual Species',
+            right_on='Species_ID',
+            how='left'
+        )
+        .drop('Species_ID')
+        .rename({taxa.capitalize(): f'Actual {taxa.capitalize()}'})
+    )
+
+    # Process NCBI RefSeq and add Known/Unknown
+    df = (
+        df.with_columns([
+            pl.col('NCBI RefSeq')
+                .str.split('_')
+                .list.slice(0, 2)
+                .list.join('_')
+                .alias('NCBI RefSeq striped')
+        ])
+        .with_columns([
+            pl.col('NCBI RefSeq striped')
+                .map_dict({k: 'Known' for k in TRIAL_MAP.get(trial_number, '')}, default='Unknown')
+                .alias('Known/Unknown')
+        ])
+    )
+
+    # Add accuracy column and final processing
+    df = (
+        df.with_columns([
+            (pl.col(f"Predicted {taxa}") == pl.col(f"Actual {taxa}"))
+                .alias('Accurate Prediction')
+        ])
+        .drop('NCBI RefSeq striped')
+    )
+
+    # Save output
     output_filename = os.path.basename(csv_file_path)
-
-    df.to_csv(f'{mod_path}/mod_{output_filename}', index=False)
+    df.write_csv(f'{mod_path}/mod_{output_filename}')
 
 
 if __name__ == "__main__":
