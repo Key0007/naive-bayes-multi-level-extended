@@ -28,12 +28,15 @@ def create_trial_map(taxa):
 
 
 def create_lookup(taxa):
-    lookup = pd.read_csv('/ifs/groups/rosenMRIGrp/kr3288/extended/new_extended_lineage.csv')
-    lookup = lookup.fillna('')
-    lookup = lookup.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
-    lookup = lookup[['Species_ID', taxa]]
-    lookup = lookup.drop_duplicates() # !!!!!!!!! drop same species
-    return lookup
+    return (
+        pl.read_csv('/Users/key/extended/new_extended_lineage.csv')
+        .fill_null('')
+        .with_columns(
+            pl.col(pl.Utf8).str.strip_chars()
+        )
+        .select(['Species_ID', taxa])
+        .unique()
+    )
 
 def output_modifier(csv_file_path):
 
