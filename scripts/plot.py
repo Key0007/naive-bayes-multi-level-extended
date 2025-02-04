@@ -1,8 +1,10 @@
+import os
 import re
 import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
+from multiprocessing import Pool
 
 def roc(file, ax):
 
@@ -49,29 +51,34 @@ def distro_graph(file, ax):
     ax.set_ylabel("Count")
 
 
+def main(taxa):
+
+    directory = Path(f'/ifs/groups/rosenMRIGrp/kr3288/extended/modified_results/{taxa}_modified')
+
+    file_paths = [str(file) for file in directory.iterdir()]
+    trials = ['trial_1', 'trial_2', 'trial_3', 'trial_4', 'trial_5']
+    file_dict = {trial: [x for x in file_paths if trial in x] for trial in trials}
+
+    file_dict = {k: ([v[i] for i in [4, 2, 3, 1, 0]] if isinstance(v, list) else v) for k, v in file_dict.items()}
+
+    fig, ax = plt.subplots(5, 2, figsize=(20, 40))
+    plt.subplots_adjust(top=0.95)
+    for i, f in enumerate(file_dict):
+        roc(f, ax[i,0])
+        distro_graph(f, ax[i,1])
+        row_title_ax = fig.add_subplot(5, 1, i+1, frameon=False)
+        row_title_ax.set_xticks([])
+        row_title_ax.set_yticks([])
+        row_title_ax.set_title(re.search(r'\d+', f).group() + "-mers", fontsize=14, fontweight='bold')
+
+    fig.suptitle(trial.capitalize(), fontsize=16, fontweight='bold')
+    plt.savefig(f'/ifs/groups/rosenMRIGrp/kr3288/extended/images/{taxa}_{title}.png')
+
+
+
 if __name__ == "__main__":
 
-    for taxa in ["phylum", "class", "order", "family"]:
+    num_threads = int(os.environ.get('SLURM_NTASKS', 48))
 
-        directory = Path(f'/ifs/groups/rosenMRIGrp/kr3288/extended/modified_results/{taxa}_modified')
-
-        file_paths = [str(file) for file in directory.iterdir()]
-        trials = ['trial_1', 'trial_2', 'trial_3', 'trial_4', 'trial_5']
-        file_dict = {trial: [x for x in file_paths if trial in x] for trial in trials}
-
-        file_dict = {k: ([v[i] for i in [4, 2, 3, 1, 0]] if isinstance(v, list) else v) for k, v in file_dict.items()}
-
-        fig, ax = plt.subplots(5, 2, figsize=(20, 40))
-        plt.subplots_adjust(top=0.95)
-        for i, f in enumerate(file_dict):
-            roc(f, ax[i,0])
-            distro_graph(f, ax[i,1])
-            # Add title for this row
-            row_title_ax = fig.add_subplot(5, 1, i+1, frameon=False)
-            row_title_ax.set_xticks([])
-            row_title_ax.set_yticks([])
-            row_title_ax.set_title(re.search(r'\d+', f).group() + "-mers", fontsize=14, fontweight='bold')
-
-        fig.suptitle(trial.capitalize(), fontsize=16, fontweight='bold')
-        plt.savefig(f'/ifs/groups/rosenMRIGrp/kr3288/extended/images/{taxa}_{title}.png')
-
+    with Pool(processes=num_threads) as pool:
+        pool.map(main, ["phylum", "class", "order", "family"])
