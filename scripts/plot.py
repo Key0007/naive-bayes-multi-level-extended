@@ -1,6 +1,7 @@
 import os
 import re
 import seaborn as sns
+import polars as pl
 from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
@@ -9,7 +10,7 @@ from multiprocessing import Pool
 def roc(file, ax):
 
     df = (
-        pl.read_csv('roc_test.csv', infer_schema_length=None)
+        pl.read_csv(file, infer_schema_length=None)
         .filter(pl.col("Predicted Species_ID").cast(pl.Utf8).str.contains(r'\d+'))
         .select(['Logarithmic probability', 'Known/Unknown'])
         .with_columns(
@@ -37,7 +38,7 @@ def roc(file, ax):
 def distro_graph(file, ax):
 
     filtered_data = (
-        pl.read_csv('roc_test.csv', infer_schema_length=None)
+        pl.read_csv(file, infer_schema_length=None)
         .filter(pl.col("Predicted Species_ID").cast(pl.Utf8).str.contains(r'\d+'))
         .select(['Logarithmic probability', 'Known/Unknown'])
     )
@@ -61,19 +62,20 @@ def main(taxa):
 
     file_dict = {k: ([v[i] for i in [4, 2, 3, 1, 0]] if isinstance(v, list) else v) for k, v in file_dict.items()}
 
-    fig, ax = plt.subplots(5, 2, figsize=(20, 40))
-    plt.subplots_adjust(top=0.95)
-    for i, f in enumerate(file_dict):
-        roc(f, ax[i,0])
-        distro_graph(f, ax[i,1])
-        row_title_ax = fig.add_subplot(5, 1, i+1, frameon=False)
-        row_title_ax.set_xticks([])
-        row_title_ax.set_yticks([])
-        row_title_ax.set_title(re.search(r'\d+', f).group() + "-mers", fontsize=14, fontweight='bold')
+    for title, files in file_dict.items():
 
-    fig.suptitle(trial.capitalize(), fontsize=16, fontweight='bold')
-    plt.savefig(f'/ifs/groups/rosenMRIGrp/kr3288/extended/images/{taxa}_{title}.png')
+        fig, ax = plt.subplots(5, 2, figsize=(20, 40))
+        plt.subplots_adjust(top=0.95)
+        for i, f in enumerate(files):
+            roc(f, ax[i,0])
+            distro_graph(f, ax[i,1])
+            row_title_ax = fig.add_subplot(5, 1, i+1, frameon=False)
+            row_title_ax.set_xticks([])
+            row_title_ax.set_yticks([])
+            row_title_ax.set_title(re.search(r'\d+', f).group() + "-mers", fontsize=14, fontweight='bold')
 
+        fig.suptitle(title.capitalize(), fontsize=16, fontweight='bold')
+        plt.savefig(f'/ifs/groups/rosenMRIGrp/kr3288/extended/images/{taxa}_{title}.png')
 
 
 if __name__ == "__main__":
