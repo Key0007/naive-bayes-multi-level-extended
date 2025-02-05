@@ -29,14 +29,14 @@ To ensure statistical robustness and balanced representation, we implemented a t
 
 Models are trained on k-mer frequencies. All k-mer count files were generated using Jellyfish. The k-mers used in this project were of length 3, 6, 9, 12 and 15. 
 
-<!-- ### Testing data
+### Testing data
 
-[... WIP ...]
+[...  ...]
 
 ### Post-data analysis and ROC/AUC generation
 
-[... WIP ...]
+[...  ...]
 
 ## Results
 
-[.. WIP ...] -->
+[...  ...] 
