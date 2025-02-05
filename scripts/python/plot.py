@@ -43,8 +43,6 @@ def distro_graph(file, ax):
         .select(['Logarithmic probability', 'Known/Unknown'])
     )
 
-    # filtered_data_pd = filtered_data.to_pandas()
-
     sns.histplot(data=filtered_data, x="Logarithmic probability", hue="Known/Unknown", ax=ax, fill=True, palette={"Known": "navy", "Unknown": "red"}, hue_order=["Unknown", "Known"], bins=1000)
 
     mode = filtered_data["Logarithmic probability"].mode()[0]
