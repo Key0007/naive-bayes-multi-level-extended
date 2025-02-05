@@ -43,6 +43,8 @@ def distro_graph(file, ax):
         .select(['Logarithmic probability', 'Known/Unknown'])
     )
 
+    # filtered_data_pd = filtered_data.to_pandas()
+
     sns.histplot(data=filtered_data, x="Logarithmic probability", hue="Known/Unknown", ax=ax, fill=True, palette={"Known": "navy", "Unknown": "red"}, hue_order=["Unknown", "Known"], bins=1000)
 
     mode = filtered_data["Logarithmic probability"].mode()[0]
@@ -60,7 +62,7 @@ def main(taxa):
     trials = ['trial_1', 'trial_2', 'trial_3', 'trial_4', 'trial_5']
     file_dict = {trial: [x for x in file_paths if trial in x] for trial in trials}
 
-    file_dict = {k: ([v[i] for i in [4, 2, 3, 1, 0]] if isinstance(v, list) else v) for k, v in file_dict.items()}
+    file_dict = {trial: sorted(paths, key=lambda x: int(''.join(filter(str.isdigit, x.split("/")[-1].split("_")[-1])))) for trial, paths in file_dict.items()}
 
     for title, files in file_dict.items():
 
@@ -72,7 +74,7 @@ def main(taxa):
             row_title_ax = fig.add_subplot(5, 1, i+1, frameon=False)
             row_title_ax.set_xticks([])
             row_title_ax.set_yticks([])
-            row_title_ax.set_title(re.search(r'\d+', f).group() + "-mers", fontsize=14, fontweight='bold')
+            row_title_ax.set_title(re.search(r'\d+', f.split("/")[-1].split("_")[-1].split("_")[0]).group() + "-mers", fontsize=14, fontweight='bold')
 
         fig.suptitle(title.capitalize(), fontsize=16, fontweight='bold')
         plt.savefig(f'/ifs/groups/rosenMRIGrp/kr3288/extended/images/{taxa}_{title}.png')
