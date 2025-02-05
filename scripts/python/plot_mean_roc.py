@@ -89,7 +89,7 @@ if __name__ == "__main__":
     
     taxa_colors = [
         ("phylum", "blue"),
-        ("class", "cyan"),
+        ("class", "mediumturquoise"),
         ("order", "orange"),
         ("family", "violet")
     ]
