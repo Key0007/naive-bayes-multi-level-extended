@@ -39,4 +39,4 @@ Models are trained on k-mer frequencies. All k-mer count files were generated us
 
 ## Results
 
-[...  ...] 
+![ROC](./results/mean_roc_all.png)
